@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="origin">
+  <title>LoadScreem GMOD</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="background-glow background-glow-left"></div>
+  <div class="background-glow background-glow-right"></div>
+
+  <main class="layout">
+    <section class="hero">
+      <p class="eyebrow">Garry's Mod Server</p>
+      <h1 id="server-name">Sua conexao esta carregando</h1>
+      <p id="server-subtitle" class="server-subtitle">Configurando informacoes do servidor...</p>
+      <p class="description">
+        Enquanto voce entra no servidor, a loadscreen escolhe um video do YouTube
+        aleatoriamente a partir da sua lista.
+      </p>
+
+      <div class="status-card">
+        <span class="status-label">Video atual</span>
+        <strong id="video-title">Preparando player...</strong>
+        <span id="video-position" class="status-meta">Aguardando lista de URLs</span>
+      </div>
+
+      <div class="help-card">
+        <span class="help-title">Como editar</span>
+        <p>
+          Abra <code>assets/videos.js</code> para editar nome do servidor, admins e links
+          do YouTube.
+        </p>
+      </div>
+
+      <div class="admins-card">
+        <div class="admins-header">
+          <span class="help-title">Admins</span>
+          <span id="admins-counter" class="admins-counter">0 online</span>
+        </div>
+        <div id="admins-list" class="admins-list">
+          <p class="admins-empty">Nenhum admin configurado ainda.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="player-shell">
+      <div class="player-frame">
+        <div id="player"></div>
+      </div>
+      <button id="skip-button" class="skip-button" type="button">Trocar video</button>
+    </section>
+  </main>
+
+  <div id="error-banner" class="error-banner hidden"></div>
+
+  <script src="assets/videos.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
