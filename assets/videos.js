@@ -10,21 +10,15 @@ window.LOADSCREEN_VIDEOS = [
 ];
 
 window.LOADSCREEN_SERVER = {
-  name: "Meu Servidor RP",
-  subtitle: "Conectando voce ao servidor...",
+  name: "S&Box By Cilo LFS/LVS/NPC's muito +",
+  subtitle: "Entrando no servidor do Cilo...",
   adminsSource: "",
   adminsRefreshMs: 30000,
   admins: [
     {
-      name: "Admin Pedro",
-      role: "Fundador",
+      name: "CILO - SC",
+      role: "Administrador",
       online: true,
-      avatar: ""
-    },
-    {
-      name: "Admin Lucas",
-      role: "Moderador",
-      online: false,
       avatar: ""
     }
   ]
