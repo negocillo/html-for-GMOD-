@@ -11,7 +11,7 @@ window.LOADSCREEN_VIDEOS = [
 
 window.LOADSCREEN_SERVER = {
   name: "S&Box By Cilo LFS/LVS/NPC's muito +",
-  subtitle: "Entrando no servidor do Cilo...",
+  subtitle: "ESTAMOS EM REVOLRMA DESCULA O TRANSTORNO...",
   adminsSource: "",
   adminsRefreshMs: 30000,
   admins: [
