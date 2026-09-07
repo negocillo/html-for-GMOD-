@@ -8,12 +8,17 @@
   var adminsListElement = document.getElementById("admins-list");
   var adminsCounterElement = document.getElementById("admins-counter");
 
-  var rawVideos = Array.isArray(window.LOADSCREEN_VIDEOS) ? window.LOADSCREEN_VIDEOS : [];
+  var rawVideos = Array.isArray(window.LOADSCREEN_VIDEOS)
+    ? window.LOADSCREEN_VIDEOS
+    : [];
+
   var settings = window.LOADSCREEN_SETTINGS || {};
   var serverConfig = window.LOADSCREEN_SERVER || {};
+
   var parsedVideos = rawVideos
     .map(function (url, index) {
       var parsed = parseYouTubeUrl(url);
+
       if (!parsed) {
         return null;
       }
@@ -28,6 +33,7 @@
 
   var currentIndex = -1;
   var player = null;
+  var retryTimer = null;
 
   function escapeHtml(text) {
     return String(text)
@@ -39,8 +45,11 @@
   }
 
   function renderServerInfo() {
-    serverNameElement.textContent = serverConfig.name || "Sua conexao esta carregando";
-    serverSubtitleElement.textContent = serverConfig.subtitle || "Carregando informacoes do servidor.";
+    serverNameElement.textContent =
+      serverConfig.name || "Sua conexao esta carregando";
+
+    serverSubtitleElement.textContent =
+      serverConfig.subtitle || "Carregando informacoes do servidor.";
   }
 
   function normalizeAdmins(admins) {
@@ -50,16 +59,29 @@
 
     return admins.map(function (admin, index) {
       return {
-        name: admin && admin.name ? String(admin.name) : "Admin " + (index + 1),
-        role: admin && admin.role ? String(admin.role) : "Equipe",
+        name:
+          admin && admin.name
+            ? String(admin.name)
+            : "Admin " + (index + 1),
+
+        role:
+          admin && admin.role
+            ? String(admin.role)
+            : "Equipe",
+
         online: Boolean(admin && admin.online),
-        avatar: admin && admin.avatar ? String(admin.avatar) : ""
+
+        avatar:
+          admin && admin.avatar
+            ? String(admin.avatar)
+            : ""
       };
     });
   }
 
   function renderAdmins(admins) {
     var normalized = normalizeAdmins(admins);
+
     var onlineCount = normalized.filter(function (admin) {
       return admin.online;
     }).length;
@@ -67,26 +89,43 @@
     adminsCounterElement.textContent = onlineCount + " online";
 
     if (!normalized.length) {
-      adminsListElement.innerHTML = "<p class=\"admins-empty\">Nenhum admin configurado ainda.</p>";
+      adminsListElement.innerHTML =
+        '<p class="admins-empty">Nenhum admin configurado ainda.</p>';
       return;
     }
 
     adminsListElement.innerHTML = normalized
       .map(function (admin) {
         var avatar = admin.avatar
-          ? "<img class=\"admin-avatar\" src=\"" + escapeHtml(admin.avatar) + "\" alt=\"" + escapeHtml(admin.name) + "\">"
-          : "<div class=\"admin-avatar\"></div>";
+          ? '<img class="admin-avatar" src="' +
+            escapeHtml(admin.avatar) +
+            '" alt="' +
+            escapeHtml(admin.name) +
+            '">'
+          : '<div class="admin-avatar"></div>';
+
         var statusLabel = admin.online ? "Online" : "Offline";
-        var statusClass = admin.online ? "admin-status-online" : "admin-status-offline";
+
+        var statusClass = admin.online
+          ? "admin-status-online"
+          : "admin-status-offline";
 
         return (
-          "<article class=\"admin-item\">" +
-            avatar +
-            "<div>" +
-              "<p class=\"admin-name\">" + escapeHtml(admin.name) + "</p>" +
-              "<p class=\"admin-role\">" + escapeHtml(admin.role) + "</p>" +
-            "</div>" +
-            "<span class=\"admin-status " + statusClass + "\">" + statusLabel + "</span>" +
+          '<article class="admin-item">' +
+          avatar +
+          "<div>" +
+          '<p class="admin-name">' +
+          escapeHtml(admin.name) +
+          "</p>" +
+          '<p class="admin-role">' +
+          escapeHtml(admin.role) +
+          "</p>" +
+          "</div>" +
+          '<span class="admin-status ' +
+          statusClass +
+          '">' +
+          statusLabel +
+          "</span>" +
           "</article>"
         );
       })
@@ -103,7 +142,9 @@
       return;
     }
 
-    fetch(serverConfig.adminsSource, { cache: "no-store" })
+    fetch(serverConfig.adminsSource, {
+      cache: "no-store"
+    })
       .then(function (response) {
         if (!response.ok) {
           throw new Error("Falha ao carregar admins");
@@ -136,22 +177,44 @@
 
     try {
       var parsedUrl = new URL(url.trim());
-      var host = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+
+      var host = parsedUrl.hostname
+        .replace(/^www\./i, "")
+        .toLowerCase();
 
       if (host === "youtu.be") {
-        var shortId = parsedUrl.pathname.replace(/\//g, "");
-        return shortId ? { id: shortId } : null;
+        var shortId = parsedUrl.pathname
+          .replace(/^\/+/, "")
+          .split("/")[0];
+
+        return shortId
+          ? { id: shortId }
+          : null;
       }
 
-      if (host === "youtube.com" || host === "m.youtube.com") {
+      if (
+        host === "youtube.com" ||
+        host === "m.youtube.com"
+      ) {
         if (parsedUrl.pathname === "/watch") {
           var videoId = parsedUrl.searchParams.get("v");
-          return videoId ? { id: videoId } : null;
+
+          return videoId
+            ? { id: videoId }
+            : null;
         }
 
-        if (parsedUrl.pathname.indexOf("/shorts/") === 0 || parsedUrl.pathname.indexOf("/embed/") === 0) {
-          var parts = parsedUrl.pathname.split("/").filter(Boolean);
-          return parts.length >= 2 ? { id: parts[1] } : null;
+        if (
+          parsedUrl.pathname.indexOf("/shorts/") === 0 ||
+          parsedUrl.pathname.indexOf("/embed/") === 0
+        ) {
+          var parts = parsedUrl.pathname
+            .split("/")
+            .filter(Boolean);
+
+          return parts.length >= 2
+            ? { id: parts[1] }
+            : null;
         }
       }
     } catch (error) {
@@ -166,16 +229,32 @@
     errorBanner.classList.remove("hidden");
   }
 
+  function hideError() {
+    errorBanner.classList.add("hidden");
+  }
+
   function updateStatus() {
-    if (currentIndex < 0 || !parsedVideos[currentIndex]) {
-      titleElement.textContent = "Nenhum video selecionado";
-      positionElement.textContent = "Adicione URLs validas em assets/videos.js";
+    if (
+      currentIndex < 0 ||
+      !parsedVideos[currentIndex]
+    ) {
+      titleElement.textContent =
+        "Nenhum video selecionado";
+
+      positionElement.textContent =
+        "Adicione URLs validas em assets/videos.js";
+
       return;
     }
 
-    titleElement.textContent = parsedVideos[currentIndex].label;
+    titleElement.textContent =
+      parsedVideos[currentIndex].label;
+
     positionElement.textContent =
-      "Tocando " + (currentIndex + 1) + " de " + parsedVideos.length;
+      "Tocando " +
+      (currentIndex + 1) +
+      " de " +
+      parsedVideos.length;
   }
 
   function getNextIndex() {
@@ -188,17 +267,70 @@
     }
 
     var nextIndex = currentIndex;
+
     while (nextIndex === currentIndex) {
-      nextIndex = Math.floor(Math.random() * parsedVideos.length);
+      nextIndex = Math.floor(
+        Math.random() * parsedVideos.length
+      );
     }
 
     return nextIndex;
   }
 
+  function startPlayback() {
+    if (!player) {
+      return;
+    }
+
+    try {
+      // Importante para autoplay no Chrome/CEF
+      player.mute();
+
+      player.setVolume(0);
+
+      player.playVideo();
+
+      hideError();
+    } catch (error) {
+      console.log(
+        "Nao foi possivel iniciar o video:",
+        error
+      );
+    }
+  }
+
+  function loadCurrentVideo() {
+    if (
+      !player ||
+      !parsedVideos[currentIndex]
+    ) {
+      return;
+    }
+
+    try {
+      player.loadVideoById({
+        videoId: parsedVideos[currentIndex].id,
+        startSeconds: 0
+      });
+
+      setTimeout(function () {
+        startPlayback();
+      }, 300);
+    } catch (error) {
+      console.log(
+        "Erro ao carregar video:",
+        error
+      );
+    }
+  }
+
   function playRandomVideo() {
     var nextIndex = currentIndex;
 
-    if (currentIndex === -1 && settings.shuffleOnStart === false) {
+    if (
+      currentIndex === -1 &&
+      settings.shuffleOnStart === false
+    ) {
       nextIndex = 0;
     } else {
       nextIndex = getNextIndex();
@@ -209,68 +341,176 @@
     }
 
     currentIndex = nextIndex;
+
     updateStatus();
 
-    if (player && typeof player.loadVideoById === "function") {
-      player.loadVideoById(parsedVideos[currentIndex].id);
-      player.playVideo();
-    }
+    loadCurrentVideo();
   }
 
   window.onYouTubeIframeAPIReady = function () {
     if (!parsedVideos.length) {
       updateStatus();
-      showError("Nenhuma URL valida foi encontrada em assets/videos.js.");
+
+      showError(
+        "Nenhuma URL valida foi encontrada em assets/videos.js."
+      );
+
       skipButton.disabled = true;
+
       return;
     }
 
-    currentIndex = settings.shuffleOnStart === false ? 0 : Math.floor(Math.random() * parsedVideos.length);
+    currentIndex =
+      settings.shuffleOnStart === false
+        ? 0
+        : Math.floor(
+            Math.random() * parsedVideos.length
+          );
+
     updateStatus();
 
     player = new YT.Player("player", {
-      videoId: parsedVideos[currentIndex].id,
+      width: "100%",
+      height: "100%",
+
+      videoId:
+        parsedVideos[currentIndex].id,
+
       playerVars: {
-        autoplay: settings.autoplay === false ? 0 : 1,
+        autoplay:
+          settings.autoplay === false
+            ? 0
+            : 1,
+
         controls: 1,
+
         disablekb: 0,
+
         fs: 1,
-        modestbranding: 1,
-        rel: 0
+
+        rel: 0,
+
+        playsinline: 1,
+
+        enablejsapi: 1,
+
+        origin: window.location.origin
       },
+
       events: {
         onReady: function (event) {
-          if (settings.autoplay === false) {
+          console.log(
+            "YouTube player pronto"
+          );
+
+          if (
+            settings.autoplay === false
+          ) {
             return;
           }
 
-          event.target.playVideo();
+          try {
+            event.target.mute();
+            event.target.setVolume(0);
+            event.target.playVideo();
+          } catch (error) {
+            console.log(
+              "Erro no autoplay:",
+              error
+            );
+          }
         },
+
         onStateChange: function (event) {
-          if (event.data === YT.PlayerState.ENDED) {
-            if (settings.allowRepeat === false && parsedVideos.length === 1) {
+          if (
+            event.data ===
+            YT.PlayerState.PLAYING
+          ) {
+            hideError();
+          }
+
+          if (
+            event.data ===
+            YT.PlayerState.ENDED
+          ) {
+            if (
+              settings.allowRepeat === false &&
+              parsedVideos.length === 1
+            ) {
               return;
             }
 
             playRandomVideo();
           }
         },
-        onError: function () {
-          playRandomVideo();
+
+        onAutoplayBlocked: function () {
+          console.log(
+            "Autoplay foi bloqueado pelo navegador."
+          );
+
+          showError(
+            "O navegador bloqueou o autoplay. Clique em Trocar video para iniciar."
+          );
+        },
+
+        onError: function (event) {
+          console.log(
+            "Erro YouTube:",
+            event.data
+          );
+
+          var code = event.data;
+
+          if (
+            code === 100 ||
+            code === 101 ||
+            code === 150 ||
+            code === 153
+          ) {
+            console.log(
+              "Video indisponivel para embed. Tentando outro..."
+            );
+
+            clearTimeout(retryTimer);
+
+            retryTimer = setTimeout(
+              function () {
+                playRandomVideo();
+              },
+              1000
+            );
+
+            return;
+          }
+
+          showError(
+            "Erro ao carregar o video. Codigo: " +
+            code
+          );
         }
       }
     });
   };
 
-  skipButton.addEventListener("click", function () {
-    playRandomVideo();
-  });
+  skipButton.addEventListener(
+    "click",
+    function () {
+      playRandomVideo();
+    }
+  );
 
   renderServerInfo();
+
   fetchAdmins();
 
   if (serverConfig.adminsSource) {
-    setInterval(fetchAdmins, Number(serverConfig.adminsRefreshMs) || 30000);
+    setInterval(
+      fetchAdmins,
+      Number(
+        serverConfig.adminsRefreshMs
+      ) || 30000
+    );
   }
 
   updateStatus();
