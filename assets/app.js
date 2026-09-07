@@ -33,11 +33,6 @@
 
   var currentIndex = -1;
   var player = null;
-  var retryTimer = null;
-
-  // =====================================================
-  // FUNCOES GERAIS
-  // =====================================================
 
   function escapeHtml(text) {
     return String(text)
@@ -48,44 +43,17 @@
       .replace(/'/g, "&#39;");
   }
 
-  function showError(message) {
-    if (!errorBanner) {
-      return;
-    }
-
-    errorBanner.textContent = message;
-    errorBanner.classList.remove("hidden");
-  }
-
-  function hideError() {
-    if (!errorBanner) {
-      return;
-    }
-
-    errorBanner.classList.add("hidden");
-  }
-
-  // =====================================================
-  // INFORMACOES DO SERVIDOR
-  // =====================================================
-
   function renderServerInfo() {
     if (serverNameElement) {
       serverNameElement.textContent =
-        serverConfig.name ||
-        "Sua conexao esta carregando";
+        serverConfig.name || "Sua conexao esta carregando";
     }
 
     if (serverSubtitleElement) {
       serverSubtitleElement.textContent =
-        serverConfig.subtitle ||
-        "Carregando informacoes do servidor.";
+        serverConfig.subtitle || "Carregando informacoes do servidor.";
     }
   }
-
-  // =====================================================
-  // ADMINS
-  // =====================================================
 
   function normalizeAdmins(admins) {
     if (!Array.isArray(admins)) {
@@ -125,62 +93,46 @@
       return admin.online;
     }).length;
 
-    adminsCounterElement.textContent =
-      onlineCount + " online";
+    adminsCounterElement.textContent = onlineCount + " online";
 
     if (!normalized.length) {
       adminsListElement.innerHTML =
-        '<p class="admins-empty">' +
-        'Nenhum admin configurado ainda.' +
-        "</p>";
-
+        '<p class="admins-empty">Nenhum admin configurado ainda.</p>';
       return;
     }
 
     adminsListElement.innerHTML = normalized
       .map(function (admin) {
-        var avatar;
-
-        if (admin.avatar) {
-          avatar =
-            '<img class="admin-avatar" src="' +
+        var avatar = admin.avatar
+          ? '<img class="admin-avatar" src="' +
             escapeHtml(admin.avatar) +
             '" alt="' +
             escapeHtml(admin.name) +
-            '">';
-        } else {
-          avatar =
-            '<div class="admin-avatar"></div>';
-        }
+            '">'
+          : '<div class="admin-avatar"></div>';
 
-        var statusLabel =
-          admin.online ? "Online" : "Offline";
+        var statusLabel = admin.online ? "Online" : "Offline";
 
-        var statusClass =
-          admin.online
-            ? "admin-status-online"
-            : "admin-status-offline";
+        var statusClass = admin.online
+          ? "admin-status-online"
+          : "admin-status-offline";
 
         return (
           '<article class="admin-item">' +
-            avatar +
-
-            "<div>" +
-              '<p class="admin-name">' +
-                escapeHtml(admin.name) +
-              "</p>" +
-
-              '<p class="admin-role">' +
-                escapeHtml(admin.role) +
-              "</p>" +
-            "</div>" +
-
-            '<span class="admin-status ' +
-              statusClass +
-            '">' +
-              statusLabel +
-            "</span>" +
-
+          avatar +
+          "<div>" +
+          '<p class="admin-name">' +
+          escapeHtml(admin.name) +
+          "</p>" +
+          '<p class="admin-role">' +
+          escapeHtml(admin.role) +
+          "</p>" +
+          "</div>" +
+          '<span class="admin-status ' +
+          statusClass +
+          '">' +
+          statusLabel +
+          "</span>" +
           "</article>"
         );
       })
@@ -202,9 +154,7 @@
     })
       .then(function (response) {
         if (!response.ok) {
-          throw new Error(
-            "Falha ao carregar admins"
-          );
+          throw new Error("Falha ao carregar admins");
         }
 
         return response.json();
@@ -215,10 +165,7 @@
           return;
         }
 
-        if (
-          payload &&
-          Array.isArray(payload.admins)
-        ) {
+        if (payload && Array.isArray(payload.admins)) {
           renderAdmins(payload.admins);
           return;
         }
@@ -230,54 +177,35 @@
       });
   }
 
-  // =====================================================
-  // YOUTUBE
-  // =====================================================
-
   function parseYouTubeUrl(url) {
-    if (
-      typeof url !== "string" ||
-      !url.trim()
-    ) {
+    if (typeof url !== "string" || !url.trim()) {
       return null;
     }
 
     try {
       var parsedUrl = new URL(url.trim());
-
       var host = parsedUrl.hostname
         .replace(/^www\./i, "")
         .toLowerCase();
 
-      // youtu.be/VIDEO_ID
       if (host === "youtu.be") {
         var shortId = parsedUrl.pathname
           .replace(/^\/+/, "")
           .split("/")[0];
 
-        return shortId
-          ? { id: shortId }
-          : null;
+        return shortId ? { id: shortId } : null;
       }
 
-      // youtube.com
       if (
         host === "youtube.com" ||
         host === "m.youtube.com"
       ) {
-
-        // youtube.com/watch?v=VIDEO_ID
         if (parsedUrl.pathname === "/watch") {
-          var videoId =
-            parsedUrl.searchParams.get("v");
+          var videoId = parsedUrl.searchParams.get("v");
 
-          return videoId
-            ? { id: videoId }
-            : null;
+          return videoId ? { id: videoId } : null;
         }
 
-        // youtube.com/shorts/VIDEO_ID
-        // youtube.com/embed/VIDEO_ID
         if (
           parsedUrl.pathname.indexOf("/shorts/") === 0 ||
           parsedUrl.pathname.indexOf("/embed/") === 0
@@ -292,20 +220,28 @@
         }
       }
     } catch (error) {
-      console.log(
-        "URL do YouTube invalida:",
-        url
-      );
-
       return null;
     }
 
     return null;
   }
 
-  // =====================================================
-  // STATUS DO VIDEO
-  // =====================================================
+  function showError(message) {
+    if (!errorBanner) {
+      return;
+    }
+
+    errorBanner.textContent = message;
+    errorBanner.classList.remove("hidden");
+  }
+
+  function hideError() {
+    if (!errorBanner) {
+      return;
+    }
+
+    errorBanner.classList.add("hidden");
+  }
 
   function updateStatus() {
     if (
@@ -339,10 +275,6 @@
     }
   }
 
-  // =====================================================
-  // ESCOLHER PROXIMO VIDEO
-  // =====================================================
-
   function getNextIndex() {
     if (!parsedVideos.length) {
       return -1;
@@ -363,143 +295,44 @@
     return nextIndex;
   }
 
-  // =====================================================
-  // CONFIGURAR AUDIO
-  // =====================================================
-
-  function setPlayerVolume() {
-    if (!player) {
-      return;
-    }
-
+  function setVolume50(target) {
     try {
-      // DESMUTA
-      player.unMute();
-
-      // VOLUME 50%
-      player.setVolume(50);
-
+      target.unMute();
+      target.setVolume(50);
     } catch (error) {
-      console.log(
-        "Nao foi possivel configurar o volume:",
-        error
-      );
+      console.log("Erro ao configurar volume:", error);
     }
   }
-
-  // =====================================================
-  // INICIAR REPRODUCAO
-  // =====================================================
-
-  function startPlayback() {
-    if (!player) {
-      return;
-    }
-
-    try {
-      // Volume 50%
-      setPlayerVolume();
-
-      // Autoplay
-      player.playVideo();
-
-      // Segunda tentativa
-      setTimeout(function () {
-        try {
-          var state =
-            player.getPlayerState();
-
-          if (
-            state !==
-              YT.PlayerState.PLAYING &&
-            state !==
-              YT.PlayerState.BUFFERING
-          ) {
-            setPlayerVolume();
-            player.playVideo();
-          }
-        } catch (error) {
-          console.log(
-            "Erro na segunda tentativa:",
-            error
-          );
-        }
-      }, 1000);
-
-      // Terceira tentativa
-      setTimeout(function () {
-        try {
-          var state =
-            player.getPlayerState();
-
-          if (
-            state !==
-              YT.PlayerState.PLAYING &&
-            state !==
-              YT.PlayerState.BUFFERING
-          ) {
-            setPlayerVolume();
-            player.playVideo();
-          }
-        } catch (error) {
-          console.log(
-            "Erro na terceira tentativa:",
-            error
-          );
-        }
-      }, 2500);
-
-    } catch (error) {
-      console.log(
-        "Nao foi possivel iniciar o video:",
-        error
-      );
-    }
-  }
-
-  // =====================================================
-  // CARREGAR VIDEO
-  // =====================================================
 
   function loadCurrentVideo() {
-    if (
-      !player ||
-      !parsedVideos[currentIndex]
-    ) {
+    if (!player || !parsedVideos[currentIndex]) {
       return;
     }
 
     try {
-      setPlayerVolume();
-
       player.loadVideoById({
-        videoId:
-          parsedVideos[currentIndex].id,
-
+        videoId: parsedVideos[currentIndex].id,
         startSeconds: 0
       });
 
-      setTimeout(function () {
-        setPlayerVolume();
-        player.playVideo();
-      }, 300);
+      setVolume50(player);
+
+      player.playVideo();
 
       setTimeout(function () {
-        setPlayerVolume();
+        setVolume50(player);
         player.playVideo();
-      }, 1200);
+      }, 500);
+
+      setTimeout(function () {
+        setVolume50(player);
+        player.playVideo();
+      }, 1500);
 
     } catch (error) {
-      console.log(
-        "Erro ao carregar video:",
-        error
-      );
+      console.log("Erro ao carregar video:", error);
     }
   }
-
-  // =====================================================
-  // VIDEO ALEATORIO
-  // =====================================================
 
   function playRandomVideo() {
     var nextIndex;
@@ -524,240 +357,139 @@
     loadCurrentVideo();
   }
 
-  // =====================================================
-  // YOUTUBE IFRAME API
-  // =====================================================
-
-  window.onYouTubeIframeAPIReady =
-    function () {
-
-      if (!parsedVideos.length) {
-        updateStatus();
-
-        showError(
-          "Nenhuma URL valida foi encontrada em assets/videos.js."
-        );
-
-        if (skipButton) {
-          skipButton.disabled = true;
-        }
-
-        return;
-      }
-
-      // Escolhe video inicial
-      if (
-        settings.shuffleOnStart === false
-      ) {
-        currentIndex = 0;
-      } else {
-        currentIndex = Math.floor(
-          Math.random() *
-          parsedVideos.length
-        );
-      }
-
+  window.onYouTubeIframeAPIReady = function () {
+    if (!parsedVideos.length) {
       updateStatus();
 
-      // =================================================
-      // CRIAR PLAYER
-      // =================================================
+      showError(
+        "Nenhuma URL valida foi encontrada em assets/videos.js."
+      );
 
-      player = new YT.Player("player", {
+      if (skipButton) {
+        skipButton.disabled = true;
+      }
 
-        width: "100%",
-        height: "100%",
+      return;
+    }
 
-        videoId:
-          parsedVideos[currentIndex].id,
+    currentIndex =
+      settings.shuffleOnStart === false
+        ? 0
+        : Math.floor(
+            Math.random() * parsedVideos.length
+          );
 
-        playerVars: {
+    updateStatus();
 
-          // AUTOPLAY
-          autoplay: 1,
+    player = new YT.Player("player", {
+      width: "100%",
+      height: "100%",
 
-          // NAO INICIA MUTADO
-          mute: 0,
+      videoId: parsedVideos[currentIndex].id,
 
-          // Esconde controles do YouTube
-          controls: 0,
+      playerVars: {
+        autoplay: 1,
+        mute: 0,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        rel: 0,
+        playsinline: 1,
+        enablejsapi: 1
+      },
 
-          // Desativa teclado
-          disablekb: 1,
+      events: {
+        onReady: function (event) {
+          try {
+            event.target.unMute();
+            event.target.setVolume(50);
+            event.target.playVideo();
 
-          // Sem fullscreen
-          fs: 0,
-
-          // Nao mostra relacionados
-          rel: 0,
-
-          // Importante para navegadores incorporados
-          playsinline: 1,
-
-          // Permite controle via JavaScript
-          enablejsapi: 1
-        },
-
-        events: {
-
-          // =============================================
-          // PLAYER PRONTO
-          // =============================================
-
-          onReady: function (event) {
-            console.log(
-              "YouTube Player pronto."
-            );
-
-            try {
-
-              // VOLUME 50%
+            setTimeout(function () {
               event.target.unMute();
               event.target.setVolume(50);
-
-              // INICIA VIDEO
               event.target.playVideo();
+            }, 500);
 
-              // Segunda tentativa
-              setTimeout(function () {
-                try {
-                  event.target.unMute();
-                  event.target.setVolume(50);
-                  event.target.playVideo();
-                } catch (error) {
-                  console.log(error);
-                }
-              }, 700);
+            setTimeout(function () {
+              event.target.unMute();
+              event.target.setVolume(50);
+              event.target.playVideo();
+            }, 1500);
 
-              // Terceira tentativa
-              setTimeout(function () {
-                try {
-                  var state =
-                    event.target.getPlayerState();
+          } catch (error) {
+            console.log("Erro no autoplay:", error);
+          }
+        },
 
-                  if (
-                    state !==
-                      YT.PlayerState.PLAYING &&
-                    state !==
-                      YT.PlayerState.BUFFERING
-                  ) {
-                    event.target.unMute();
-                    event.target.setVolume(50);
-                    event.target.playVideo();
-                  }
-                } catch (error) {
-                  console.log(error);
-                }
-              }, 2000);
-
-            } catch (error) {
-              console.log(
-                "Erro no autoplay:",
-                error
-              );
-            }
-          },
-
-          // =============================================
-          // ESTADO DO PLAYER
-          // =============================================
-
-          onStateChange: function (event) {
-
-            // VIDEO COMECOU
-            if (
-              event.data ===
-              YT.PlayerState.PLAYING
-            ) {
-              hideError();
-
-              try {
-                // GARANTE SOM
-                event.target.unMute();
-
-                // GARANTE 50%
-                event.target.setVolume(50);
-
-              } catch (error) {
-                console.log(
-                  "Erro configurando audio:",
-                  error
-                );
-              }
-            }
-
-            // VIDEO TERMINOU
-            if (
-              event.data ===
-              YT.PlayerState.ENDED
-            ) {
-
-              if (
-                settings.allowRepeat === false &&
-                parsedVideos.length === 1
-              ) {
-                return;
-              }
-
-              playRandomVideo();
-            }
-          },
-
-          // =============================================
-          // AUTOPLAY BLOQUEADO
-          // =============================================
-
-          onAutoplayBlocked: function () {
-            console.log(
-              "Autoplay com audio foi bloqueado."
-            );
-
-            /*
-              Alguns navegadores e o CEF podem impedir
-              autoplay com audio.
-
-              Tentamos novamente.
-            */
+        onStateChange: function (event) {
+          if (
+            event.data ===
+            YT.PlayerState.PLAYING
+          ) {
+            hideError();
 
             try {
-              player.unMute();
-              player.setVolume(50);
-              player.playVideo();
+              event.target.unMute();
+              event.target.setVolume(50);
             } catch (error) {
               console.log(
-                "Falha no autoplay:",
+                "Erro configurando audio:",
                 error
               );
             }
-          },
+          }
 
-          // =============================================
-          // ERRO NO VIDEO
-          // =============================================
+          if (
+            event.data ===
+            YT.PlayerState.ENDED
+          ) {
+            if (
+              settings.allowRepeat === false &&
+              parsedVideos.length === 1
+            ) {
+              return;
+            }
 
-          onError: function (event) {
+            playRandomVideo();
+          }
+        },
+
+        onAutoplayBlocked: function () {
+          console.log(
+            "O navegador bloqueou autoplay com som."
+          );
+
+          /*
+            Aqui NAO vamos mutar.
+            Apenas tentamos novamente com audio.
+          */
+
+          try {
+            player.unMute();
+            player.setVolume(50);
+            player.playVideo();
+          } catch (error) {
             console.log(
-              "Erro YouTube:",
-              event.data
-            );
-
-            clearTimeout(retryTimer);
-
-            // Tenta outro video
-            retryTimer = setTimeout(
-              function () {
-                playRandomVideo();
-              },
-              1000
+              "Nao foi possivel iniciar:",
+              error
             );
           }
-        }
-      });
-    };
+        },
 
-  // =====================================================
-  // BOTAO TROCAR VIDEO
-  // =====================================================
+        onError: function (event) {
+          console.log(
+            "Erro YouTube:",
+            event.data
+          );
+
+          setTimeout(function () {
+            playRandomVideo();
+          }, 1000);
+        }
+      }
+    });
+  };
 
   if (skipButton) {
     skipButton.addEventListener(
@@ -768,20 +500,13 @@
     );
   }
 
-  // =====================================================
-  // INICIALIZACAO
-  // =====================================================
-
   renderServerInfo();
-
   fetchAdmins();
 
   if (serverConfig.adminsSource) {
     setInterval(
       fetchAdmins,
-      Number(
-        serverConfig.adminsRefreshMs
-      ) || 30000
+      Number(serverConfig.adminsRefreshMs) || 30000
     );
   }
 
