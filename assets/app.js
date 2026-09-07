@@ -283,12 +283,42 @@
     }
 
     try {
-      // Importante para autoplay no Chrome/CEF
       player.mute();
-
       player.setVolume(0);
-
       player.playVideo();
+
+      setTimeout(function () {
+        try {
+          var state = player.getPlayerState();
+
+          if (
+            state !== YT.PlayerState.PLAYING &&
+            state !== YT.PlayerState.BUFFERING
+          ) {
+            player.mute();
+            player.setVolume(0);
+            player.playVideo();
+          }
+        } catch (error) {
+          console.log("Erro na segunda tentativa:", error);
+        }
+      }, 1200);
+
+      setTimeout(function () {
+        try {
+          var state = player.getPlayerState();
+
+          if (
+            state !== YT.PlayerState.PLAYING &&
+            state !== YT.PlayerState.BUFFERING
+          ) {
+            player.mute();
+            player.playVideo();
+          }
+        } catch (error) {
+          console.log("Erro na terceira tentativa:", error);
+        }
+      }, 2500);
 
       hideError();
     } catch (error) {
@@ -308,6 +338,9 @@
     }
 
     try {
+      player.mute();
+      player.setVolume(0);
+
       player.loadVideoById({
         videoId: parsedVideos[currentIndex].id,
         startSeconds: 0
@@ -315,7 +348,7 @@
 
       setTimeout(function () {
         startPlayback();
-      }, 300);
+      }, 500);
     } catch (error) {
       console.log(
         "Erro ao carregar video:",
@@ -373,49 +406,93 @@
       width: "100%",
       height: "100%",
 
-      videoId:
-        parsedVideos[currentIndex].id,
+      videoId: parsedVideos[currentIndex].id,
 
       playerVars: {
-        autoplay:
-          settings.autoplay === false
-            ? 0
-            : 1,
-
-        controls: 1,
-
-        disablekb: 0,
-
-        fs: 1,
-
+        autoplay: 1,
+        mute: 1,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
         rel: 0,
-
         playsinline: 1,
-
-        enablejsapi: 1,
-
-        origin: window.location.origin
+        enablejsapi: 1
       },
 
       events: {
         onReady: function (event) {
-          console.log(
-            "YouTube player pronto"
-          );
-
-          if (
-            settings.autoplay === false
-          ) {
-            return;
-          }
+          console.log("YouTube player pronto.");
 
           try {
             event.target.mute();
             event.target.setVolume(0);
-            event.target.playVideo();
+
+            event.target.loadVideoById({
+              videoId:
+                parsedVideos[currentIndex].id,
+              startSeconds: 0
+            });
+
+            setTimeout(function () {
+              try {
+                event.target.mute();
+                event.target.setVolume(0);
+                event.target.playVideo();
+              } catch (error) {
+                console.log(
+                  "Erro no autoplay:",
+                  error
+                );
+              }
+            }, 300);
+
+            setTimeout(function () {
+              try {
+                var state =
+                  event.target.getPlayerState();
+
+                if (
+                  state !==
+                    YT.PlayerState.PLAYING &&
+                  state !==
+                    YT.PlayerState.BUFFERING
+                ) {
+                  event.target.mute();
+                  event.target.playVideo();
+                }
+              } catch (error) {
+                console.log(
+                  "Erro na segunda tentativa:",
+                  error
+                );
+              }
+            }, 1500);
+
+            setTimeout(function () {
+              try {
+                var state =
+                  event.target.getPlayerState();
+
+                if (
+                  state !==
+                    YT.PlayerState.PLAYING &&
+                  state !==
+                    YT.PlayerState.BUFFERING
+                ) {
+                  event.target.mute();
+                  event.target.playVideo();
+                }
+              } catch (error) {
+                console.log(
+                  "Erro na terceira tentativa:",
+                  error
+                );
+              }
+            }, 3000);
+
           } catch (error) {
             console.log(
-              "Erro no autoplay:",
+              "Erro preparando autoplay:",
               error
             );
           }
@@ -446,12 +523,19 @@
 
         onAutoplayBlocked: function () {
           console.log(
-            "Autoplay foi bloqueado pelo navegador."
+            "Autoplay bloqueado pelo navegador/CEF."
           );
 
-          showError(
-            "O navegador bloqueou o autoplay. Clique em Trocar video para iniciar."
-          );
+          try {
+            player.mute();
+            player.setVolume(0);
+            player.playVideo();
+          } catch (error) {
+            console.log(
+              "Falha ao tentar liberar autoplay:",
+              error
+            );
+          }
         },
 
         onError: function (event) {
@@ -463,15 +547,13 @@
           var code = event.data;
 
           if (
+            code === 2 ||
+            code === 5 ||
             code === 100 ||
             code === 101 ||
             code === 150 ||
             code === 153
           ) {
-            console.log(
-              "Video indisponivel para embed. Tentando outro..."
-            );
-
             clearTimeout(retryTimer);
 
             retryTimer = setTimeout(
@@ -485,7 +567,7 @@
           }
 
           showError(
-            "Erro ao carregar o video. Codigo: " +
+            "Erro ao carregar video. Codigo: " +
             code
           );
         }
